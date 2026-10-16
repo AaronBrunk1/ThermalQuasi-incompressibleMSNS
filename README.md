@@ -41,6 +41,7 @@ pip install --upgrade ngsolve
 The Firedrake implementation provides the CPG scheme for the applied example and supports arbitrary polynomial orders.
 
 **Required version:** Firedrake ..; Irksome ...
+
 NOTE: This script requires using an Irksome branch with EquationBC support:
 See https://github.com/firedrakeproject/Irksome/tree/baierreinio/galerkin_in_time_equationbc
 
