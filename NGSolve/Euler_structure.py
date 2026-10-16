@@ -129,7 +129,6 @@ eta  = lambda rhop,thetap: etaForm(rhop,thetap,N)
 Vvec = CF(tuple(VvecD))
 Unit = CF(tuple(Unit))
 
-#rho0 = CF((1+0.8*sin(2*pi*x)*sin(2*pi*y),1/VvecD[1] - VvecD[0]/VvecD[1]*(1+0.8*sin(2*pi*x)*sin(2*pi*y)))) 
 rho0 = CF( (0.2 + 0.9*IfPos(y-0.1,1,0)*IfPos(y-0.2,0,1) + 0.9*IfPos(y-0.8,1,0)*IfPos(y-0.9,0,1)\
                + 0.9*IfPos(x-0.1,1,0)*IfPos(x-0.2,0,1) + 0.9*IfPos(x-0.8,1,0)*IfPos(x-0.9,0,1) \
                - 0.9*IfPos(x-0.1,1,0)*IfPos(x-0.2,0,1)*IfPos(y-0.1,1,0)*IfPos(y-0.2,0,1) \
@@ -145,15 +144,7 @@ rho0 = CF( (0.2 + 0.9*IfPos(y-0.1,1,0)*IfPos(y-0.2,0,1) + 0.9*IfPos(y-0.8,1,0)*I
                - 0.9*IfPos(y-0.8,1,0)*IfPos(y-0.9,0,1)*IfPos(x-0.1,1,0)*IfPos(x-0.2,0,1) \
                - 0.9*IfPos(y-0.8,1,0)*IfPos(y-0.9,0,1)*IfPos(x-0.8,1,0)*IfPos(x-0.9,0,1)) ))
 u0 = CF((-10**(-0)*sin(pi*x)**2*sin(2*pi*y),10**(-0)*sin(pi*y)**2*sin(2*pi*x)))
-#rho0 = CF( (0.5 + 0.49999*tanh((sqrt((x-0.4)**2+(y-0.4)**2)-0.25)/(sqrt(2)*0.01)),\
-#            0.5 - 0.49999*tanh((sqrt((x-0.6)**2+(y-0.6)**2)-0.25)/(sqrt(2)*0.01)) ,\
-#             1/Vvec[2]- Vvec[0]/Vvec[2]*(0.5 + 0.49999*tanh((sqrt((x-0.4)**2+(y-0.4)**2)-0.25)/(sqrt(2)*0.01))) -  Vvec[1]/Vvec[2]*(0.5 - 0.49999*tanh((sqrt((x-0.6)**2+(y-0.6)**2)-0.25)/(sqrt(2)*0.01)) )  ))
 theta0 = CF(1.0 + 0.1*sin(2*pi*x)*cos(2*pi*y))
-
-
-#rho0 = CF( (0.5 + 0.49999*sin(4*pi*x)*cos(4*pi*y),\
-#            0.5 - 0.49999*sin(2*pi*x)*cos(6*pi*y) ,\
-#             1/Vvec[2]- Vvec[0]/Vvec[2]*(0.5 + 0.49999*sin(4*pi*x)*cos(4*pi*y)) -  Vvec[1]/Vvec[2]*(0.5 - 0.49999*sin(2*pi*x)*cos(6*pi*y))  )   )    
 
 
 #-------Metavariables---------

@@ -18,9 +18,6 @@ N = 2 # number of component
 itsteps = 40 # max newtonsteps
 iterror = 1e-7 # tolerance newton
 
-free = 0
-ap = 0 # =1 really robin temperature, =0 (rhos*u-J_s)*n= Robin
-
 #SetNumThreads(5) #limit num of threads
 
 #------Saving params--------
@@ -109,9 +106,6 @@ wall_tc = k_ref * (0.1)                         # Wall thermal conductivity, W /
 wcf = (wall_thickness / L_ref) * (k_ref / wall_tc)
 
 
-
-#T_wall = CF(1 + (0.1 * (((y + 1) / 2) ** 10)) + (0.05 * ((x / 4) ** 10)))
-#T_wall = 1 + 0.15 * ((((y + 1)/2)**10) * (1 - (x/4)**2)**10)
 T_wall = 1 + 0.1 * ((y + 1) / 2)
 
 
@@ -277,7 +271,7 @@ with TaskManager():
 
     Vh  = (H1(Th,order=1)**N)#1
     Vh2 = (H1(Th,order=1)**N)#1
-    Xh  = (VectorH1(Th, order=2, dirichlet="wall|inlet1|inlet2"))#2dirichlet="^(?!outlet$).*"dirichlet="wall|inlet1|inlet2"
+    Xh  = (VectorH1(Th, order=2, dirichlet="wall|inlet1|inlet2"))
     Qh  = (H1(Th,order=1))#1
     RR   = NumberSpace(Th)
     FES = FESpace([Vh,Vh2,Xh,Qh,RR,Qh])
@@ -294,20 +288,8 @@ with TaskManager():
 
     x12 = GridFunction(Vh)
 
-
     test1 = GridFunction(Qh)
     test2 = GridFunction(Qh)
-
-   # test1.Interpolate(1, definedon=Th.Boundaries("^(?!outlet$).*"))
-    #test2.Interpolate(1, definedon=Th.Boundaries("inlet1|inlet2|wall"))
-
-    #vtkA = VTKOutput(
-    #    ma=Th,
-    #    coefs=[test1,test2],
-    #    names=["solution1","solution2"],
-    #    filename=outputpath+"Bilder/"+ outputname+"_test"
-    #)      
-    #vtkA.Do()
 
     #-----Define Energy -----
     def TotEnergy(rho,theta,u):
@@ -359,30 +341,23 @@ with TaskManager():
     J1in1 = CF(-M_1_ND * (v_ref_1 / v_ref) * (c_pure_1 / c_ref)*2*x*(x-1))*CF((2,-1))
     J2in2 = CF(-M_2_ND * (v_ref_2 / v_ref) * (c_pure_2 / c_ref)*2*x*(x-1))*CF((2,1))
 
-    #J1out = CF(-M_1_ND * (v_ref_1 / v_ref) * (c_pure_1 / c_ref)*2*(y+0.5)*(y-0.5))*CF((1,0))
-    #J2out = CF(-M_2_ND * (v_ref_2 / v_ref) * (c_pure_2 / c_ref)*2*(y+0.5)*(y-0.5))*CF((1,0))
-
     uBCI1 = CF(J1in1/(rhoold*Unit))
     uBCI2 = CF(J2in2/(rhoold*Unit))
-    #uBCO  = CF(((J1out+J2out)/(rhoold*Unit)))
 
     dS1 = ds(definedon=Th.Boundaries("inlet1"))
     dS2 = ds(definedon=Th.Boundaries("inlet2"))
-    #dO  = ds(definedon=Th.Boundaries("outlet"))
 
 
     #------Newton weak form-------
     a=BilinearForm(FES)
     a+=  1.0*(1.0/dt*(rhodelta)*psi*dx - (Grad(psi)*udelta)*rhoold*dx + 1/Pe*Tensorcontraction(mudelta,theta,thetaold,Grad(psi),MM)*dx\
         + 1/Pe*TensorcontractionNewton(mu,theta,thetadelta,thetaold,Grad(psi),MM)*dx +rhoold*psi*udelta*n*ds("outlet")\
-        #- ( free/Pe*Tensorcontraction_BC(mudelta,theta,thetaold,psi,MM))*ds("outlet", skeleton=True)\
         + mudelta*xi*dx - f_rhorho*rhodelta*xi*dx - f_rhotheta*thetadelta*xi*dx - (Me_1/M_1_ND*xi[0]+Me_2/M_2_ND*xi[1])*pdelta*dx\
         + Re*0.5/dt*((rhodelta-rhoold)*Unit)*(u*v)*dx + Re*0.5/dt*((rho-rhoold)*Unit)*(udelta*v)*dx  + Re*1.0/dt*(rhoold*Unit)*udelta*v*dx\
         + Re*0.5*(rhoold*Unit)*(Grad(udelta)*uold)*v*dx - Re*0.5*(rhoold*Unit)*(Grad(v)*(uold))*udelta*dx\
         + 0.5*Re*rhoold*Unit*IfPos(u*n,u*n,0)*udelta*v*ds("outlet")\
 		+ 2.0*InnerProduct(Sym(Grad(udelta)),Sym(Grad(v)))*dx + lame_ND*div(udelta)*div(v)*dx - pdelta*div(v)*dx\
         - udelta*grad(q)*dx + 1/Pe*Tensorcontraction(mudelta,theta,thetaold,OuterProduct(Vvec,Grad(q)),MM)*dx + udelta*q*n*ds("outlet")\
-        #- (free/Pe*Tensorcontraction(mudelta,theta,thetaold,OuterProduct(Vvec,q*n),MM))*ds("outlet", skeleton=True)\
         + 1/Pe*TensorcontractionNewton(mu,theta,thetadelta,thetaold,OuterProduct(Vvec,Grad(q)),MM)*dx\
         + 1.0/dt*(snew_rho*rhodelta + snew_theta*thetadelta)*w*dx - sold*udelta*grad(w)*dx\
         - Me*4*InnerProduct(Sym(Grad(udelta)),Sym(Grad(u)))*w/theta*dx - 2.0*lame_ND*Me*div(u)*div(udelta)*w/theta*dx\
@@ -393,18 +368,12 @@ with TaskManager():
         + 1/Pe_k*KK*(1.0/(thetaold*theta)*grad(theta))*(w/(theta**2*thetaold)*thetadelta*grad(theta))*dx \
         - 1/Pe*Tensorcontraction2(mudelta,theta,thetaold,w,MM)*dx  -  1/Pe*Tensorcontraction2Newton(mu,theta,thetadelta,thetaold,w,MM)*dx\
         + 1/(Pe_k*wcf)*(T_wall/(theta**2)*thetadelta)*w*ds("inlet1|inlet2") \
-        #+ ap*(J1in1*n*mudelta[0]/theta-(rhoold*Unit*uBCI1*n)*(mudelta[0]+mudelta[1])/theta)*w*dS1 \
-        #+ ap*(J2in2*n*mudelta[0]/theta-(rhoold*Unit*uBCI2*n)*(mudelta[0]+mudelta[1])/theta)*w*dS2\
-        #- ap*(J1in1*n*mu[0]/(theta**2)*thetadelta-(rhoold*Unit*uBCI1*n)*(mu[0]+mu[1])/(theta**2)*thetadelta)*w*dS1 \
-        #- ap*(J2in2*n*mu[0]/(theta**2)*thetadelta-(rhoold*Unit*uBCI2*n)*(mu[0]+mu[1])/(theta**2)*thetadelta)*w*dS2\
-        #+ (free/Pe*Tensorcontraction2_BC(mudelta,theta,thetaold,w,MM))*ds("outlet", skeleton=True)\
         + sold*udelta*w*n*ds("outlet"))
            #+ 1.0/Me*( (Grad(mudelta)*v)*rhoold - Me*(Grad(pdelta)*v)*(V_1_ND*rhoold[0]+V_2_ND*rhoold[1]) + sold*grad(thetadelta)*v)*dx  \    
 
     L=LinearForm(FES)
     L+= -1.0*(1.0/dt*(rho-rhoold)*psi*dx - (Grad(psi)*u)*rhoold*dx + 1/Pe*Tensorcontraction(mu,theta,thetaold,Grad(psi),MM)*dx\
         + J1in1*n*psi[0]*dS1 + J2in2*n*psi[1]*dS2 + rhoold*psi*u*n*ds("outlet")\
-        #- (free/Pe*Tensorcontraction_BC(mu,theta,thetaold,psi,MM))*ds("outlet", skeleton=True)\
         + mu*xi*dx - f_rho*xi*dx - (Me_1/M_1_ND*xi[0]+Me_2/M_2_ND*xi[1])*p*dx\
         + Re*0.5/dt*((rho-rhoold)*Unit)*(u*v)*dx + Re*1.0/dt*(rhoold*Unit)*(u-uold)*v*dx\
         + Re*0.5*(rhoold*Unit)*(Grad(u)*uold)*v*dx - Re*0.5*(rhoold*Unit)*(Grad(v)*(uold))*u*dx\
@@ -413,19 +382,13 @@ with TaskManager():
 		#+ 1.0/Me*( (Grad(mu)*v)*rhoold - Me*(Grad(p)*v)*(V_1_ND*rhoold[0]+V_2_ND*rhoold[1]) + sold*grad(theta)*v)*dx\
         - u*grad(q)*dx + 1/Pe*Tensorcontraction(mu,theta,thetaold,OuterProduct(Vvec,Grad(q)),MM)*dx + (V_1_ND*rhoold[0]+V_2_ND*rhoold[1])*u*q*n*ds("outlet")\
         - (V_1_ND * rhoold[0] + V_2_ND * rhoold[1] - 1)*u*n*q*ds("outlet")\
-        #- 1/dt*(V_1_ND * rhoold[0] + V_2_ND * rhoold[1] - 1)*q*dx\
-        #- (free/Pe*Tensorcontraction(mu,theta,thetaold,OuterProduct(Vvec,q*n),MM))*ds("outlet", skeleton=True)\
         + (V_1_ND*J1in1*n*q)*dS1 + (V_2_ND*J2in2*n*q)*dS2\
         + 1.0/dt*(snew-sold)*w*dx - sold*u*grad(w)*dx - Me*2.0*InnerProduct(Sym(Grad(u)),Sym(Grad(u)))*w/theta*dx\
         - Me*lame_ND*div(u)**2*w/theta*dx\
         + 1/Pe_k*KK*(1/(thetaold*theta)*grad(theta))*(1/thetaold*grad(w)-w/(theta*thetaold)*grad(theta))*dx\
         + 1/(Pe_k*wcf)*(1-T_wall/theta)*w*ds("inlet1|inlet2")
         - 1/Pe*Tensorcontraction2(mu,theta,thetaold,w,MM)*dx\
-        #+ ap*(sold*uBCI1*n + J1in1*n*mu[0]/theta-(rhoold*Unit*uBCI1*n)*(mu[0]+mu[1])/theta)*w*dS1\
-        #+ ap*(sold*uBCI2*n + J2in2*n*mu[0]/theta-(rhoold*Unit*uBCI2*n)*(mu[0]+mu[1])/theta)*w*dS2\
-        + sold*u*w*n*ds("outlet")\
-        #+ ( free/Pe*Tensorcontraction2_BC(mu,theta,thetaold,w,MM))*ds("outlet", skeleton=True)
-        )
+        + sold*u*w*n*ds("outlet"))
 
     #------Set IC/ compute Metdata-------
     rho.Interpolate(rho0)
@@ -494,18 +457,6 @@ with TaskManager():
             p.vec.data     += pdiff.vec.data
             lam.vec.data   += lamdiff.vec.data
             theta.vec.data += thetadiff.vec.data
-
-            #n1=sqrt(Integrate(rhodiff**2, Th, VOL))
-            #n2=sqrt(Integrate(mudiff**2, Th, VOL))
-            #n3=sqrt(Integrate(udiff**2, Th, VOL))
-            #n4=sqrt(Integrate(pdiff**2, Th, VOL))
-            #n5=sqrt(Integrate(thetadiff**2, Th, VOL))
-
-            #print("Rho",n1)
-            #print("mu",n2)
-            #print("u",n3)
-            #print("p",n4)
-            #print("T",n5)
 
             # Newtonerror
             newtonerror=sqrt(Integrate(rhodiff**2 + mudiff**2 + udiff**2 + pdiff**2 + thetadiff**2, Th, VOL))

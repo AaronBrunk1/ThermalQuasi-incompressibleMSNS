@@ -3,16 +3,13 @@ import math
 import numpy as np
 import sys 
 import os
-#sys.path.append(os.path.abspath("C:/Users/brunk/Desktop/Uni/Codes/NGSOLVE/External_Module"))
+
 from ngsolve import *
 
 #-------Numerische Parameter--------
 N=2
 #SetNumThreads(8) 
 outputname = "Nonisothermal_MWS_NS"
-
-
-
 outputpath = ""
 
 if(outputpath==""):
@@ -40,8 +37,6 @@ with TaskManager():
         print("Stage:",ref)
         n_mesh = 2**(ref) # Gittergroeße
         n_mesh2 = 2**(1+ref) # Gittergroeße
-        #dt = 10**(-3)*2**(-ref)  # Zeitschritt
-        #dt2 = 10**(-3)*2**(-ref-1) # Zeitschritt
         #--------File output---------
         itcount = 0 # Newton Überschreitungen
         steps = math.ceil(T/dt) # Anzahl Zeitschritte
@@ -52,18 +47,15 @@ with TaskManager():
         Vh  = Periodic(H1(Th,order=1)**N)#1
         Xh = Periodic(VectorH1(Th, order=2))#2
         Qh  = Periodic(H1(Th,order=1))#1
-        #R   = NumberSpace(Th)
         FES = FESpace([Vh,Vh,Xh,Qh,Qh])
 
         phi,mu,u,p,theta=GridFunction(FES).components
 
-        #Th2 = Make_2D(nx=n_mesh2)
         Th2 = MakeStructured2DMesh(quads=False,nx=n_mesh2,ny = n_mesh2, periodic_x=True,periodic_y=True)
 
         Vh2  = Periodic(H1(Th2,order=1)**N)#1
         Xh2 = Periodic(VectorH1(Th2, order=2))#2
         Qh2  = Periodic(H1(Th2,order=1))#1
-        #R   = NumberSpace(Th)
         FES2 = FESpace([Vh2,Vh2,Xh2,Qh2,Qh2])
 
         phi1,mu1,u1,p1,theta1=GridFunction(FES2).components
@@ -78,14 +70,9 @@ with TaskManager():
             with open(outputpath + outputname + str(n_mesh) + "_" + str(i) + ".step", "rb") as infile:
                 phi.vec.data,mu.vec.data,u.vec.data,p.vec.data,theta.vec.data = pickle.load(infile)
 
-         
-            #phi2,mu2,u2,p2=GridFunction(FES2).components
-            #phip,mup,ep,thetap,up,pp=GridFunction(FES).components
 
             with open(outputpath + outputname + str(n_mesh2) + "_" + str(i) + ".step", "rb") as infile:
                 phi1.vec.data,mu1.vec.data,u1.vec.data,p1.vec.data,theta1.vec.data = pickle.load(infile)
-            #infile = open(outputpath+outputname+"_"+str(n_mesh2)+"_"+str(2*i)+".step", "rb")
-            #phi2,mu2,u2,p2 = pickle.load(infile)
 
             phiL2[i,ref] = Integrate((phi1-phi)**2,Th2,VOL)
             uL2[i,ref] = Integrate((u1-u)**2,Th2,VOL)

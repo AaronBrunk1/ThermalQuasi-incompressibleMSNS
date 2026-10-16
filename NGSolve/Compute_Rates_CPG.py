@@ -3,17 +3,14 @@ import math
 import numpy as np
 import sys 
 import os
-#sys.path.append(os.path.abspath("C:/Users/brunk/Desktop/Uni/Codes/NGSOLVE/External_Module"))
 from ngsolve import *
 from ngsolve.meshes import MakeStructured2DMesh
+
 #-------Numerische Parameter--------
 N=2
 dim = 2
 
 outputname = "Nonisothermal_MWS_NS"
-
-
-
 outputpath = ""
 
 if(outputpath==""):
@@ -42,8 +39,6 @@ with TaskManager():
         print("Stage:",ref)
         n_mesh = 2**(ref) # Gittergroeße
         n_mesh2 = 2**(1+ref) # Gittergroeße
-        #dt = 10**(-3)*2**(-ref)  # Zeitschritt
-        #dt2 = 10**(-3)*2**(-ref-1) # Zeitschritt
         #--------File output---------
         itcount = 0 # Newton Überschreitungen
         steps = math.ceil(T/dt) # Anzahl Zeitschritte
@@ -71,9 +66,6 @@ with TaskManager():
 
             with open(outputpath + outputname + str(n_mesh) + "_" + str(i) + ".step", "rb") as infile:
                 phi.vec.data,mu.vec.data,m.vec.data,u.vec.data,p.vec.data,snew.vec.data,theta.vec.data = pickle.load(infile)
-
-
- 
 
             phi1,mu1,m1,u1,p1,s1,theta1=GridFunction(FES2).components
 
@@ -112,12 +104,12 @@ with TaskManager():
     print(maxphi)
     print(ratephi)
 
-    print("U:")
+    print("m:")
     print(maxu)
     print(rateu)
 
     
-    print("theta:")
+    print("s:")
     print(maxtheta)
     print(ratetheta)
 

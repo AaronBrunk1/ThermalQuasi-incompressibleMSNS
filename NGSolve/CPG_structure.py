@@ -145,7 +145,7 @@ eta  = lambda rhop,thetap: etaForm(rhop,thetap,N)
 Vvec = CF(tuple(VvecD))
 Unit = CF(tuple(Unit))
 
-#rho0 = CF((1+0.8*sin(2*pi*x)*sin(2*pi*y),1/VvecD[1] - VvecD[0]/VvecD[1]*(1+0.8*sin(2*pi*x)*sin(2*pi*y)))) 
+
 rho0 = CF( (0.2 + 0.9*IfPos(y-0.1,1,0)*IfPos(y-0.2,0,1) + 0.9*IfPos(y-0.8,1,0)*IfPos(y-0.9,0,1)\
                + 0.9*IfPos(x-0.1,1,0)*IfPos(x-0.2,0,1) + 0.9*IfPos(x-0.8,1,0)*IfPos(x-0.9,0,1) \
                - 0.9*IfPos(x-0.1,1,0)*IfPos(x-0.2,0,1)*IfPos(y-0.1,1,0)*IfPos(y-0.2,0,1) \
